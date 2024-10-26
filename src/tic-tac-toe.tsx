@@ -1,13 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
+import { Button } from './components/ui/button';
 
-const Confetti = () => {
-  const [particles, setParticles] = useState([]);
+// Definición de interfaces
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  speed: number;
+  angle: number;
+}
+
+interface Winner {
+  winner: string;
+  line?: number[];
+}
+
+interface Scores {
+  player: number;
+  computer: number;
+  draws: number;
+}
+
+interface PlayerSelectionProps {
+  onSelect: (letter: 'X' | 'O') => void;
+}
+
+// Componente Confetti
+const Confetti: React.FC = () => {
+  const [particles, setParticles] = useState<Particle[]>([]);
   
   useEffect(() => {
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+    const newParticles: Particle[] = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: -20,
@@ -52,7 +79,8 @@ const Confetti = () => {
   );
 };
 
-const PlayerSelection = ({ onSelect }) => {
+// Componente PlayerSelection
+const PlayerSelection: React.FC<PlayerSelectionProps> = ({ onSelect }) => {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -79,21 +107,22 @@ const PlayerSelection = ({ onSelect }) => {
   );
 };
 
-const TicTacToe = () => {
-  const [board, setBoard] = useState(Array(9).fill(''));
-  const [playerLetter, setPlayerLetter] = useState(null);
-  const [gameOver, setGameOver] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [winningLine, setWinningLine] = useState(null);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
-  const [scores, setScores] = useState({
+// Componente principal TicTacToe
+const TicTacToe: React.FC = () => {
+  const [board, setBoard] = useState<string[]>(Array(9).fill(''));
+  const [playerLetter, setPlayerLetter] = useState<'X' | 'O' | null>(null);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [showCelebration, setShowCelebration] = useState<boolean>(false);
+  const [winningLine, setWinningLine] = useState<number[] | null>(null);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [isThinking, setIsThinking] = useState<boolean>(false);
+  const [scores, setScores] = useState<Scores>({
     player: 0,
     computer: 0,
     draws: 0
   });
 
-  const calculateWinner = (squares) => {
+  const calculateWinner = (squares: string[]): Winner | null => {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
       [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -108,29 +137,27 @@ const TicTacToe = () => {
     return squares.every(square => square !== '') ? { winner: 'Draw' } : null;
   };
 
-  const findBestMove = (squares) => {
-    const computerLetter = playerLetter === 'X' ? 'O' : 'X';
-    const availableMoves = squares.map((square, index) => square === '' ? index : null).filter(val => val !== null);
+  const findBestMove = (squares: string[]): number => {
+    if (!playerLetter) return 0;
     
-    // Añadir algo de aleatoriedad (20% de probabilidad de hacer un movimiento aleatorio)
+    const computerLetter = playerLetter === 'X' ? 'O' : 'X';
+    const availableMoves = squares.map((square, index) => 
+      square === '' ? index : null).filter((val): val is number => val !== null);
+    
     if (Math.random() < 0.2) {
       return availableMoves[Math.floor(Math.random() * availableMoves.length)];
     }
 
-    // A veces (30% de probabilidad) no bloquea el movimiento ganador del jugador
     const shouldBlock = Math.random() > 0.3;
     
-    // Tomar el centro si está disponible (70% de probabilidad)
     if (squares[4] === '' && Math.random() < 0.7) return 4;
     
-    // Buscar movimiento ganador
     for (const move of availableMoves) {
       const boardCopy = [...squares];
       boardCopy[move] = computerLetter;
       if (calculateWinner(boardCopy)?.winner === computerLetter) return move;
     }
     
-    // Bloquear movimiento ganador del jugador
     if (shouldBlock) {
       for (const move of availableMoves) {
         const boardCopy = [...squares];
@@ -139,18 +166,16 @@ const TicTacToe = () => {
       }
     }
     
-    // Preferir esquinas pero no siempre (50% de probabilidad)
     const corners = [0, 2, 6, 8].filter(corner => squares[corner] === '');
     if (corners.length > 0 && Math.random() < 0.5) {
       return corners[Math.floor(Math.random() * corners.length)];
     }
     
-    // Movimiento aleatorio en cualquier posición disponible
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)] || 0;
   };
 
-  const makeComputerMove = async (currentBoard) => {
-    if (gameOver) return;
+  const makeComputerMove = async (currentBoard: string[]): Promise<void> => {
+    if (gameOver || !playerLetter) return;
     
     setIsThinking(true);
     
@@ -160,8 +185,8 @@ const TicTacToe = () => {
       const computerLetter = playerLetter === 'X' ? 'O' : 'X';
       const move = findBestMove(currentBoard);
       
-      if (move !== undefined && currentBoard[move] === '') {
-        const newBoard = Array.from(currentBoard);
+      if (typeof move === 'number' && currentBoard[move] === '') {
+        const newBoard = [...currentBoard];
         newBoard[move] = computerLetter;
         setBoard(newBoard);
         
@@ -169,7 +194,7 @@ const TicTacToe = () => {
         if (result) {
           setGameOver(true);
           if (result.winner !== 'Draw') {
-            setWinningLine(result.line);
+            setWinningLine(result.line || []);
             setShowCelebration(result.winner === playerLetter);
             setScores(prev => ({
               ...prev,
@@ -186,10 +211,10 @@ const TicTacToe = () => {
     }
   };
 
-  const handleClick = async (index) => {
-    if (board[index] !== '' || gameOver || isThinking) return;
+  const handleClick = async (index: number): Promise<void> => {
+    if (!playerLetter || board[index] !== '' || gameOver || isThinking) return;
 
-    const newBoard = Array.from(board);
+    const newBoard = [...board];
     newBoard[index] = playerLetter;
     setBoard(newBoard);
 
@@ -197,7 +222,7 @@ const TicTacToe = () => {
     if (result) {
       setGameOver(true);
       if (result.winner !== 'Draw') {
-        setWinningLine(result.line);
+        setWinningLine(result.line || []);
         setShowCelebration(true);
         setScores(prev => ({
           ...prev,
@@ -214,7 +239,7 @@ const TicTacToe = () => {
     }
   };
 
-  const resetGame = () => {
+  const resetGame = (): void => {
     setBoard(Array(9).fill(''));
     setGameOver(false);
     setShowCelebration(false);
@@ -222,7 +247,7 @@ const TicTacToe = () => {
     setIsThinking(false);
   };
 
-  const resetAll = () => {
+  const resetAll = (): void => {
     resetGame();
     setGameStarted(false);
     setPlayerLetter(null);
@@ -233,7 +258,7 @@ const TicTacToe = () => {
     });
   };
 
-  const handlePlayerSelection = (letter) => {
+  const handlePlayerSelection = (letter: 'X' | 'O'): void => {
     setPlayerLetter(letter);
     setGameStarted(true);
     
@@ -255,7 +280,7 @@ const TicTacToe = () => {
       ? "Computer is thinking..."
       : `Your turn (${playerLetter})`;
 
-  const getSquareColor = (value, index) => {
+  const getSquareColor = (value: string, index: number): string => {
     if (winningLine?.includes(index)) {
       return value === 'X' 
         ? 'bg-blue-200 text-blue-700 animate-pulse border-blue-300' 

@@ -26,7 +26,7 @@ You can try the game here: [Tic Tac Toe Game](https://mundodigitalpro.github.io/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/[your-github-username]/tic-tac-toe.git
+git clone https://github.com/mundodigitalpro/tic-tac-toe.git
 ```
 
 2. Navigate to the project directory:
