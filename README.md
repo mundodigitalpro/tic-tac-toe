@@ -13,7 +13,7 @@ A modern implementation of the classic Tic Tac Toe game built with React, TypeSc
 
 ## 🚀 Live Demo
 
-You can try the game here: [Tic Tac Toe Game](https://[your-github-username].github.io/tic-tac-toe/)
+You can try the game here: [Tic Tac Toe Game](https://mundodigitalpro.github.io/tic-tac-toe/)
 
 ## 🛠️ Built With
 
